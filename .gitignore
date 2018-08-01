@@ -133,4 +133,4 @@ venv.bak/
 *.bak
 reader_cache.sqlite
 *.xpr
-
+cover
