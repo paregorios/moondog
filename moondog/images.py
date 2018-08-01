@@ -14,7 +14,7 @@ import shutil
 logger = logging.getLogger(__name__)
 
 
-class Image:
+class ImageBag:
 
     def __init__(self, path: str, auto_make: bool = False) -> None:
         self.path = realpath(expanduser(expandvars(normpath(path))))
@@ -39,6 +39,7 @@ class Image:
 
     def accession(self, path: str):
         self._import_original(path)
+        self._generate_master()
 
     def _import_original(self, path: str):
         d = self.components['original'] = {}
@@ -47,6 +48,9 @@ class Image:
         d['path'] = join(self.path, 'data', d['filename'])
         shutil.copy2(d['accession_path'], d['path'])
         self._update(manifests=True)
+
+    def _generate_master(self):
+        pass
 
     def _update(self, manifests=False):
         """Update the bag."""

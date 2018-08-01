@@ -4,7 +4,7 @@
 
 from bagit import BagError
 import logging
-from moondog.images import Image as MoondogImage
+from moondog.images import ImageBag
 from nose.tools import assert_equal, assert_false, assert_true, raises
 from os import makedirs
 from os.path import abspath, exists, join, realpath
@@ -43,20 +43,20 @@ class Test_Image_Basics(TestCase):
 
     def test_image_construct(self):
         """Test Image Construction"""
-        im = MoondogImage(test_bag_path, auto_make=True)
-        assert_true(isinstance(im, MoondogImage))
+        im = ImageBag(test_bag_path, auto_make=True)
+        assert_true(isinstance(im, ImageBag))
         del im
 
     @raises(OSError)
     def test_image_construct_exists(self):
         makedirs(test_bag_path)
-        im = MoondogImage(test_bag_path, auto_make=True)
+        im = ImageBag(test_bag_path, auto_make=True)
         del im
 
     @raises(OSError)
     def test_image_construct_fail(self):
         """Test Image Construction Failure (does not exist)"""
-        im = MoondogImage(test_bag_path)  # default: auto_make=False
+        im = ImageBag(test_bag_path)  # default: auto_make=False
         del im
 
 
@@ -73,7 +73,7 @@ class Test_Image_Import(TestCase):
             rmtree(test_bag_path)
 
     def test_import(self):
-        im = MoondogImage(test_bag_path, auto_make=True)
+        im = ImageBag(test_bag_path, auto_make=True)
         im.accession(join(test_data_path, 'src', 'IMG_4107.JPG'))
         assert_true(exists(test_original_path))
         with open(join(test_bag_path, 'bag-info.txt'), 'r') as f:
