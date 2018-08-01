@@ -19,7 +19,8 @@ setup(
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
         'Topic :: Change Me',
-        'License :: License :: OSI Approved :: GNU Affero General Public License v3'
+        'License :: License :: OSI Approved :: GNU Affero General Public '
+            'License v3'
     ],
     keywords='"change me", "please change me',
 
@@ -35,16 +36,16 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    # install_requires=['peppercorn'],
+    install_requires=['airtight', 'bagit', 'better-exceptions'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    # extras_require={
+    extras_require={
     #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
+        'test': ['coverage', 'nose'],
+    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
