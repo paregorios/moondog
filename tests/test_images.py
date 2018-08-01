@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Python 3 tests template (changeme)"""
+"""Tests for moondog """
 
 import logging
-from moondog.images import MoondogImage
+from moondog.images import Image as MoondogImage
 from nose.tools import assert_equal, assert_false, assert_true, raises
 from os.path import abspath, join, realpath
 from unittest import TestCase
@@ -32,6 +32,8 @@ class Test_This(TestCase):
         """Change me"""
         pass
 
-    def test_a(self):
-        """Change me"""
-        pass
+    def test_image(self):
+        """Test Image"""
+        im = MoondogImage(join(test_data_path, 'foo'))
+        assert_true(isinstance(im, MoondogImage))
+        del im

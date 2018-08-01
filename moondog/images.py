@@ -9,8 +9,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class MoondogImage:
 
-    def init(self):
-        pass
+class Image:
+
+    def __init__(self, path: str, auto_make: bool = False) -> None:
+        return None
 
