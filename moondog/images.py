@@ -38,6 +38,9 @@ class Image:
         return None
 
     def accession(self, path: str):
+        self._import_original(path)
+
+    def _import_original(self, path: str):
         d = self.components['original'] = {}
         d['accession_path'] = realpath(expanduser(expandvars(normpath(path))))
         d['filename'] = basename(d['accession_path'])
