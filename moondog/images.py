@@ -8,7 +8,8 @@ from bagit import Bag, BagError, make_bag
 import better_exceptions
 import logging
 from os import makedirs
-from os.path import expanduser, expandvars, normpath, realpath
+from os.path import basename, expanduser, expandvars, join, normpath, realpath
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -33,4 +34,15 @@ class Image:
                 raise OSError(
                     '{} does not seem to be a valid Moondog Image bag: {}'
                     ''.format(self.path, str(e)))
+        self.components = {}
         return None
+
+    def accession(self, path: str):
+        d = self.components['original'] = {}
+        d['accession_path'] = realpath(expanduser(expandvars(normpath(path))))
+        d['path'] = join(self.path, 'data', basename(d['accession_path']))
+        shutil.copy2(d['accession_path'], d['path'])
+        self.bag.save(manifests=True)
+        if not self.bag.is_valid():
+            raise RuntimeError('Bag is invalid!')
+

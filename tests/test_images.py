@@ -13,6 +13,8 @@ from unittest import TestCase
 logger = logging.getLogger(__name__)
 test_data_path = abspath(realpath(join('tests', 'data')))
 test_bag_path = join(test_data_path, 'foo')
+test_original = 'IMG_4107.JPG'
+test_original_path = join(test_bag_path, 'data', test_original)
 
 
 def setup_module():
@@ -56,3 +58,17 @@ class Test_Image_Basics(TestCase):
         del im
 
 
+class Test_Image_Import(TestCase):
+
+    def setUp(self):
+        """Change me"""
+        pass
+
+    def tearDown(self):
+        """Change me"""
+        pass
+
+    def test_import(self):
+        im = MoondogImage(test_bag_path, auto_make=True)
+        im.accession(join(test_data_path, 'src', 'IMG_4107.JPG'))
+        assert_true(exists(test_original_path))
