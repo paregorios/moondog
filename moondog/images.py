@@ -40,9 +40,24 @@ class Image:
     def accession(self, path: str):
         d = self.components['original'] = {}
         d['accession_path'] = realpath(expanduser(expandvars(normpath(path))))
-        d['path'] = join(self.path, 'data', basename(d['accession_path']))
+        d['filename'] = basename(d['accession_path'])
+        d['path'] = join(self.path, 'data', d['filename'])
         shutil.copy2(d['accession_path'], d['path'])
-        self.bag.save(manifests=True)
-        if not self.bag.is_valid():
-            raise RuntimeError('Bag is invalid!')
+        self._update(manifests=True)
+
+    def _update(self, manifests=False):
+        """Update the bag."""
+        for fn, fmeta in self.components.items():
+            for term, value in fmeta.items():
+                bag_term = '{}-{}'.format(
+                    fn.title(),
+                    term.replace('_', ' ').title().replace(' ', '-'))
+                try:
+                    prior_value = self.bag.info[bag_term]
+                except KeyError:
+                    self.bag.info[bag_term] = value
+                else:
+                    if prior_value != value:
+                        self.bag.info[bag_term] = value
+        self.bag.save(manifests=manifests)
 
