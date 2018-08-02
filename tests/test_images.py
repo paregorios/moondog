@@ -17,6 +17,7 @@ test_data_path = abspath(realpath(join('tests', 'data')))
 test_bag_path = join(test_data_path, 'foo')
 test_original = 'IMG_4107.JPG'
 test_original_path = join(test_bag_path, 'data', test_original)
+test_master_path = join(test_bag_path, 'data', 'master.tif')
 
 
 def setup_module():
@@ -76,13 +77,16 @@ class Test_Image_Import(TestCase):
         im = ImageBag(test_bag_path, auto_make=True)
         im.accession(join(test_data_path, 'src', 'IMG_4107.JPG'))
         assert_true(exists(test_original_path))
+        assert_true(exists(test_master_path))
         with open(join(test_bag_path, 'bag-info.txt'), 'r') as f:
             lines = [l[:-1] for l in f.readlines()]
         del f
+        for line in lines:
+            print(line)
         assert_true(lines[0].startswith("Bag-Software-Agent: bagit.py"))
-        assert_true(lines[1].startswith("Bagging-Date: 2018-08-01"))
-        assert_true(lines[2].startswith("Original-Accession-Path:"))
-        assert_equal(lines[3], "Original-Filename: IMG_4107.JPG")
-        assert_true(lines[4].startswith("Original-Path:"))
+        assert_true(lines[1].startswith("Bagging-Date: "))
+        assert_equal(lines[2], "Master-Filename: master.tif")
+        assert_true(lines[3].startswith("Original-Accession-Path:"))
+        assert_equal(lines[4], "Original-Filename: IMG_4107.JPG")
         assert_true(exists(join(test_data_path, 'src', 'IMG_4107.JPG')))
 

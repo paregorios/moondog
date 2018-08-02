@@ -6,9 +6,14 @@ Manage image collection
 
 from bagit import Bag, BagError, make_bag
 import better_exceptions
+from exiftool import ExifTool
+from libxmp import XMPFiles
 import logging
 from os import makedirs
-from os.path import basename, expanduser, expandvars, join, normpath, realpath
+from os.path import (basename, expanduser, expandvars, join, normpath,
+                     realpath, splitext)
+from PIL import Image
+from pprint import pprint
 import shutil
 
 logger = logging.getLogger(__name__)
@@ -45,12 +50,25 @@ class ImageBag:
         d = self.components['original'] = {}
         d['accession_path'] = realpath(expanduser(expandvars(normpath(path))))
         d['filename'] = basename(d['accession_path'])
-        d['path'] = join(self.path, 'data', d['filename'])
-        shutil.copy2(d['accession_path'], d['path'])
+        fn, ext = splitext(d['filename'])
+        target_path = join(self.path, 'data', d['filename'])
+        shutil.copy2(
+            d['accession_path'], target_path)
+        with ExifTool() as et:
+            meta = et.get_metadata(target_path)
+        pprint(meta)
+        xmp = XMPFiles(file_path=target_path).get_xmp()
+        pprint(xmp)
         self._update(manifests=True)
 
     def _generate_master(self):
-        pass
+        infn = self.components['original']['filename']
+        d = self.components['master'] = {}
+        d['filename'] = 'master.tif'
+        Image.open(
+            join(self.path, 'data', infn)).save(
+            join(self.path, 'data', d['filename']))
+        self._update(manifests=True)
 
     def _update(self, manifests=False):
         """Update the bag."""
