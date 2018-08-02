@@ -29,6 +29,13 @@ class RoleTerm(Enum):
     PHOTOGRAPHER = 'photographer'
 
 
+class TitleType(Enum):
+    FULL = 'full'
+    SHORT = 'short'
+    SUBTITLE = 'subtitle'
+    TRANSLATED = 'translated'
+
+
 class LanguageAware:
     """Superclass for providing language awareness to other classes."""
 
@@ -113,6 +120,25 @@ class Agent:
 
     def __str__(self):
         return '{}: {}'.format(self.role.value, self.names[0].full_name)
+
+
+class Title(LanguageAware, SortAware):
+
+    def __init__(
+        self,
+        title_val: str,
+        title_type: TitleType = TitleType.FULL,
+        **kwargs
+    ):
+        self.value = title_val
+        self.title_type = title_type
+        try:
+            kwargs['sort_val']
+        except KeyError:
+            SortAware.__init__(self, sort_val=self.value)
+        else:
+            SortAware.__init__(self, **kwargs, force=True)
+        LanguageAware.__init__(self, **kwargs)
 
 
 class DescriptiveMetadata:

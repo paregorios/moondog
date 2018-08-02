@@ -4,7 +4,7 @@
 
 import logging
 from moondog.metadata import (Agent, LanguageAware, Name, DescriptiveMetadata,
-                              NameType, RoleTerm)
+                              NameType, RoleTerm, Title, TitleType)
 from nose.tools import assert_equal, assert_false, assert_true, raises
 from os.path import abspath, join, realpath
 from unittest import TestCase
@@ -109,4 +109,18 @@ class Test_Metadata(TestCase):
         m = DescriptiveMetadata(**{})
         del m
 
+    def test_title(self):
+        """Test title"""
+        d = {
+            'title_val': 'Rocks: Thinking Things',
+            'title_type': TitleType.FULL
+        }
+        t = Title(**d)
+        assert_equal(t.value, 'Rocks: Thinking Things')
+        assert_equal(t.sort_val, 'rocksthinkingthings')
+        assert_equal(t.title_type, TitleType.FULL)
+        del t
+        d['sort_val'] = '12345'
+        t = Title(**d)
+        assert_equal(t.sort_val, '12345')
 
