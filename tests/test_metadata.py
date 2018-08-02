@@ -45,14 +45,13 @@ class Test_Metadata(TestCase):
         d = {
             'full_name': 'Tom Elliott',
             'display_name': 'Elliott, Tom',
-            'sort_name': 'Elliott, Tom',
             'name_type': NameType.PERSONAL,
             'lang': 'en'
         }
         n = Name(**d)
         assert_equal(n.full_name, 'Tom Elliott')
         assert_equal(n.display_name, 'Elliott, Tom')
-        assert_equal(n.sort_name, 'elliotttom')
+        assert_equal(n.sort_val, 'elliotttom')
         assert_equal(n.name_type, NameType.PERSONAL)
         assert_equal(n.lang, 'en')
         assert_equal(str(n), 'personal name: "Tom Elliott"')
@@ -68,10 +67,10 @@ class Test_Metadata(TestCase):
 
     def test_agent_name_dict(self):
         """Test agent creation with a dictionary for name"""
-        names = [{'full_name': 'Tom Elliott', 'sort_name': 'Elliott, Tom'}]
+        names = [{'full_name': 'Tom Elliott', 'sort_val': 'elliotttom'}]
         a = Agent(names)
         assert_equal(a.names[0].full_name, 'Tom Elliott')
-        assert_equal(a.names[0].sort_name, 'elliotttom')
+        assert_equal(a.names[0].sort_val, 'elliotttom')
         assert_equal(a.role, RoleTerm.PHOTOGRAPHER)
         assert_equal(str(a), 'photographer: Tom Elliott')
 

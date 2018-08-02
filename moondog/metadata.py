@@ -15,6 +15,7 @@ import string
 from validators import url
 
 logger = logging.getLogger(__name__)
+punct_translator = str.maketrans('', '', string.punctuation)
 
 
 class NameType(Enum):
@@ -31,7 +32,7 @@ class RoleTerm(Enum):
 class LanguageAware:
     """Superclass for providing language awareness to other classes."""
 
-    def __init__(self, lang: str = 'und'):
+    def __init__(self, lang: str = 'und', **kwargs):
         tag = language_tags.tags.check(lang)
         if not tag:
             raise ValueError(
@@ -39,13 +40,25 @@ class LanguageAware:
         self.lang = lang
 
 
-class Name(LanguageAware):
+class SortAware:
+    """Superclass for providing sortability information to other classes."""
+
+    def __init__(self, sort_val: str, force: bool = False, **kwargs):
+        logger.debug('sort_val: "{}"'.format(sort_val))
+        logger.debug('force: {}'.format(force))
+        if force:
+            self.sort_val = sort_val
+        else:
+            self.sort_val = sort_val.translate(punct_translator).lower().\
+                            replace(' ', '')
+
+
+class Name(LanguageAware, SortAware):
 
     def __init__(
         self,
         full_name: str,
         display_name: str = '',
-        sort_name: str = '',
         name_type: NameType = NameType.PERSONAL,
         **kwargs
     ) -> None:
@@ -54,14 +67,16 @@ class Name(LanguageAware):
             self.display_name = display_name
         else:
             self.display_name = full_name
-        if sort_name != '':
-            translator = str.maketrans('', '', string.punctuation)
-            self.sort_name = sort_name.translate(translator).lower().replace(
-                ' ', '')
+        try:
+            kwargs['sort_val']
+        except KeyError:
+            logger.debug('Name supplying sort_val')
+            SortAware.__init__(self, sort_val=self.display_name)
         else:
-            self.sort_name = self.full_name.lower().replace(' ', '')
+            logger.debug('Forcing provided sort_val')
+            SortAware.__init__(self, **kwargs, force=True)
         self.name_type = name_type
-        super().__init__(**kwargs)
+        LanguageAware.__init__(self, **kwargs)
 
     def __str__(self):
         return '{} name: "{}"'.format(self.name_type.value, self.full_name)
