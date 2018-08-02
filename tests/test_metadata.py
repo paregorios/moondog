@@ -3,7 +3,8 @@
 """Test metadata functionality for moondog"""
 
 import logging
-from moondog.metadata import Agent, Name, NameType, RoleTerm
+from moondog.metadata import (Agent, Name, DescriptiveMetadata, NameType,
+                              RoleTerm)
 from nose.tools import assert_equal, assert_false, assert_true, raises
 from os.path import abspath, join, realpath
 from unittest import TestCase
@@ -80,3 +81,26 @@ class Test_Metadata(TestCase):
         names = [Name('Tom Elliott')]
         a = Agent(names, uris=['pickles!'])
         del a
+
+    def test_descriptive_metadata(self):
+        """Test descriptive metadata"""
+        m = DescriptiveMetadata(agents=[Agent(names=[Name('Tom Elliott')])])
+        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
+
+    def test_descriptive_metadata_agent_dict(self):
+        """Test descriptive metadata with agent info in a dict"""
+        m = DescriptiveMetadata(agents=[{'names': [Name('Tom Elliott')]}])
+        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
+
+    @raises(ValueError)
+    def test_descriptive_metadata_agent_bad(self):
+        """Test descriptive metadata with badly formated agent."""
+        m = DescriptiveMetadata(agents=['the', 'long', 'and', 'winding'])
+        del m
+
+    def test_descriptive_metadata_no_agents(self):
+        """Test descriptive metadata without agents"""
+        m = DescriptiveMetadata(**{})
+        del m
+
+

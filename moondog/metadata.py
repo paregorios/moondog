@@ -96,12 +96,19 @@ class Agent:
 class DescriptiveMetadata:
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            if k in ['name', 'names']:
-                self.names = []
-            if k == 'name':
-                self.names.append(Name(**v))
-            elif k == 'names':
-                for n in v:
-                    self.names.append(Name(**n))
+        self.agents = []
+        try:
+            kwargs['agents']
+        except KeyError:
+            pass
+        else:
+            for a in kwargs['agents']:
+                if isinstance(a, Agent):
+                    self.agents.append(a)
+                elif isinstance(a, dict):
+                    self.agents.append(Agent(**a))
+                else:
+                    raise ValueError(
+                        'Agent information of type {} is not supported.'
+                        ''.format(type(a)))
 
