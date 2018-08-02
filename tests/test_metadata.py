@@ -88,27 +88,6 @@ class Test_Metadata(TestCase):
         a = Agent(names, uris=['pickles!'])
         del a
 
-    def test_descriptive_metadata(self):
-        """Test descriptive metadata"""
-        m = DescriptiveMetadata(agents=[Agent(names=[Name('Tom Elliott')])])
-        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
-
-    def test_descriptive_metadata_agent_dict(self):
-        """Test descriptive metadata with agent info in a dict"""
-        m = DescriptiveMetadata(agents=[{'names': [Name('Tom Elliott')]}])
-        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
-
-    @raises(ValueError)
-    def test_descriptive_metadata_agent_bad(self):
-        """Test descriptive metadata with badly formated agent."""
-        m = DescriptiveMetadata(agents=['the', 'long', 'and', 'winding'])
-        del m
-
-    def test_descriptive_metadata_no_agents(self):
-        """Test descriptive metadata without agents"""
-        m = DescriptiveMetadata(**{})
-        del m
-
     def test_title(self):
         """Test title"""
         d = {
@@ -123,4 +102,46 @@ class Test_Metadata(TestCase):
         d['sort_val'] = '12345'
         t = Title(**d)
         assert_equal(t.sort_val, '12345')
+
+    def test_descriptive_metadata(self):
+        """Test descriptive metadata"""
+        m = DescriptiveMetadata(
+            agents=[Agent(names=[Name('Tom Elliott')])],
+            titles=[Title('A quick trip to Zucchabar')])
+        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
+        assert_equal(m.titles[0].value, 'A quick trip to Zucchabar')
+        assert_equal(m.titles[0].sort_val, 'aquicktriptozucchabar')
+
+    def test_descriptive_metadata_agent_dict(self):
+        """Test descriptive metadata with agent info in a dict"""
+        m = DescriptiveMetadata(agents=[{'names': [Name('Tom Elliott')]}])
+        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
+
+    @raises(ValueError)
+    def test_descriptive_metadata_agent_bad(self):
+        """Test descriptive metadata with badly formated agent."""
+        m = DescriptiveMetadata(agents=['the', 'long', 'and', 'winding'])
+        del m
+
+    def test_descriptive_metadata_title_dict(self):
+        """Test descriptive metadata with title info in a dict"""
+        m = DescriptiveMetadata(
+            agents=[{'names': [Name('Tom Elliott')]}],
+            titles=[{'title_val': 'A quick trip to Zucchabar'}])
+        assert_equal(str(m.agents[0]), 'photographer: Tom Elliott')
+        assert_equal(m.titles[0].value, 'A quick trip to Zucchabar')
+
+    @raises(ValueError)
+    def test_descriptive_metadata_title_bad(self):
+        """Test descriptive metadata with badly formatted title"""
+        m = DescriptiveMetadata(
+            agents=[{'names': [Name('Tom Elliott')]}],
+            titles=['the', 'road', 'goes', 'ever', 'ever', 'on'])
+        del m
+
+    def test_descriptive_metadata_no_agents(self):
+        """Test descriptive metadata without agents"""
+        m = DescriptiveMetadata(**{})
+        del m
+
 

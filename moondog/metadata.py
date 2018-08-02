@@ -159,4 +159,19 @@ class DescriptiveMetadata:
                     raise ValueError(
                         'Agent information of type {} is not supported.'
                         ''.format(type(a)))
+        self.titles = []
+        try:
+            kwargs['titles']
+        except KeyError:
+            pass
+        else:
+            for t in kwargs['titles']:
+                if isinstance(t, Title):
+                    self.titles.append(t)
+                elif isinstance(t, dict):
+                    self.titles.append(Title(**t))
+                else:
+                    raise ValueError(
+                        'Title information of type {} is not supported.'
+                        ''.format(type(a)))
 
