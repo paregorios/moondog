@@ -28,7 +28,18 @@ class RoleTerm(Enum):
     PHOTOGRAPHER = 'photographer'
 
 
-class Name:
+class LanguageAware:
+    """Superclass for providing language awareness to other classes."""
+
+    def __init__(self, lang: str = 'und'):
+        tag = language_tags.tags.check(lang)
+        if not tag:
+            raise ValueError(
+                'Invalid language tag: "{}"'.format(tag))
+        self.lang = lang
+
+
+class Name(LanguageAware):
 
     def __init__(
         self,
@@ -36,7 +47,7 @@ class Name:
         display_name: str = '',
         sort_name: str = '',
         name_type: NameType = NameType.PERSONAL,
-        lang: str = 'und'
+        **kwargs
     ) -> None:
         self.full_name = full_name
         if display_name != '':
@@ -50,11 +61,7 @@ class Name:
         else:
             self.sort_name = self.full_name.lower().replace(' ', '')
         self.name_type = name_type
-        tag = language_tags.tags.tag(lang)
-        if tag is None:
-            raise ValueError(
-                'Invalid language tag: "{}"'.format(tag))
-        self.lang = lang
+        super().__init__(**kwargs)
 
     def __str__(self):
         return '{} name: "{}"'.format(self.name_type.value, self.full_name)

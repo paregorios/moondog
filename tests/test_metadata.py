@@ -3,8 +3,8 @@
 """Test metadata functionality for moondog"""
 
 import logging
-from moondog.metadata import (Agent, Name, DescriptiveMetadata, NameType,
-                              RoleTerm)
+from moondog.metadata import (Agent, LanguageAware, Name, DescriptiveMetadata,
+                              NameType, RoleTerm)
 from nose.tools import assert_equal, assert_false, assert_true, raises
 from os.path import abspath, join, realpath
 from unittest import TestCase
@@ -32,6 +32,13 @@ class Test_Metadata(TestCase):
     def tearDown(self):
         """Change me"""
         pass
+
+    def test_languageaware(self):
+        LanguageAware(lang='fr')
+
+    @raises(ValueError)
+    def test_languageaware_bad(self):
+        LanguageAware(lang="bad_apples")
 
     def test_name(self):
         """Test name creation"""
