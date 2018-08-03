@@ -7,7 +7,7 @@ Metadata management for moondog
 import better_exceptions
 from enum import Enum, auto
 import inspect
-import jsonpickle
+import json
 import language_tags
 import logging
 # from lxml import etree
@@ -209,13 +209,7 @@ class DescriptiveMetadata(GetDict):
                         ''.format(type(a)))
 
     def write_json(self, path: str):
-        d = {
-
-        }
-        j = jsonpickle.encode(self, unpicklable=False)
+        d = self.get_dict()
         with open(path, 'w', encoding='utf-8') as f:
-            f.write(j)
+            json.dump(d, f, ensure_ascii=False, indent=4, sort_keys=True)
         del f
-        logger.info(
-            'wrote {} characters on {}'
-            ''.format(len(j), path))

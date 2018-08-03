@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 """Test metadata functionality for moondog"""
 
+import json
 import logging
 from moondog.metadata import (Agent, LanguageAware, Name, DescriptiveMetadata,
                               NameType, RoleTerm, Title, TitleType)
 from nose.tools import assert_dict_equal, assert_equal, assert_false, assert_true, raises
+from os import remove
 from os.path import abspath, join, realpath
 from unittest import TestCase
 
@@ -17,12 +19,18 @@ TestCase.maxDiff = None
 
 def setup_module():
     """Change me"""
-    pass
+    try:
+        remove(join(test_data_path, 'zucchabar.json'))
+    except OSError:
+        pass
 
 
 def teardown_module():
     """Change me"""
-    pass
+    try:
+        remove(join(test_data_path, 'zucchabar.json'))
+    except OSError:
+        pass
 
 
 class Test_Metadata(TestCase):
@@ -194,6 +202,37 @@ class Test_Metadata(TestCase):
         m = DescriptiveMetadata(
             agents=[Agent(names=[Name('Tom Elliott')])],
             titles=[Title('A quick trip to Zucchabar')])
-        m.write_json(join(test_data_path, 'zucchabar.json'))
+        path = join(test_data_path, 'zucchabar.json')
+        m.write_json(path)
+        with open(path, 'r', encoding='utf-8') as f:
+            d = json.load(f)
+        del f
+        assert_dict_equal(
+            d,
+            {
+                "agents": [
+                    {
+                        "names": [
+                            {
+                                "display_name": "Tom Elliott",
+                                "full_name": "Tom Elliott",
+                                "lang": "und",
+                                "name_type": "personal",
+                                "sort_val": "tomelliott"
+                            }
+                        ],
+                        "role": "photographer",
+                        "uris": []
+                    }
+                ],
+                "titles": [
+                    {
+                        "lang": "und",
+                        "sort_val": "aquicktriptozucchabar",
+                        "title_type": "full",
+                        "value": "A quick trip to Zucchabar"
+                    }
+                ]
+            })
 
 
