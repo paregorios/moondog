@@ -5,12 +5,14 @@
 import logging
 from moondog.metadata import (Agent, LanguageAware, Name, DescriptiveMetadata,
                               NameType, RoleTerm, Title, TitleType)
-from nose.tools import assert_equal, assert_false, assert_true, raises
+from nose.tools import assert_dict_equal, assert_equal, assert_false, assert_true, raises
 from os.path import abspath, join, realpath
 from unittest import TestCase
 
 logger = logging.getLogger(__name__)
 test_data_path = abspath(realpath(join('tests', 'data')))
+
+TestCase.maxDiff = None
 
 
 def setup_module():
@@ -24,6 +26,8 @@ def teardown_module():
 
 
 class Test_Metadata(TestCase):
+
+    maxDiff = None
 
     def setUp(self):
         """Change me"""
@@ -55,6 +59,12 @@ class Test_Metadata(TestCase):
         assert_equal(n.name_type, NameType.PERSONAL)
         assert_equal(n.lang, 'en')
         assert_equal(str(n), 'personal name: "Tom Elliott"')
+
+    def test_name_auto(self):
+        """Test name automatic defaults."""
+        d = {'full_name': 'Tom Elliott'}
+        n = Name(**d)
+        assert_equal(n.sort_val, 'tomelliott')  # yeah, it's not very smart
 
     def test_agent(self):
         """Test agent creation"""
@@ -143,5 +153,47 @@ class Test_Metadata(TestCase):
         """Test descriptive metadata without agents"""
         m = DescriptiveMetadata(**{})
         del m
+
+    def test_descriptive_metadata_get_dict(self):
+        n = Name('Tom Elliott')
+        assert_equal(n.display_name, 'Tom Elliott')
+        assert_equal(n.sort_val, 'tomelliott')
+        m = DescriptiveMetadata(
+            agents=[Agent(names=[n])],
+            titles=[Title('A quick trip to Zucchabar')])
+        d = m.get_dict()
+        assert_dict_equal(
+            d,
+            {
+                'agents': [
+                    {
+                        'names': [
+                            {
+                                'full_name': 'Tom Elliott',
+                                'display_name': 'Tom Elliott',
+                                'sort_val': 'tomelliott',
+                                'name_type': 'personal',
+                                'lang': 'und'
+                            }
+                        ],
+                        'role': 'photographer',
+                        'uris': []
+                    }
+                ],
+                'titles': [
+                    {
+                        'sort_val': 'aquicktriptozucchabar',
+                        'lang': 'und',
+                        'title_type': 'full',
+                        'value': 'A quick trip to Zucchabar',
+                    }
+                ]
+            })
+
+    def test_descriptive_metadata_write_json(self):
+        m = DescriptiveMetadata(
+            agents=[Agent(names=[Name('Tom Elliott')])],
+            titles=[Title('A quick trip to Zucchabar')])
+        m.write_json(join(test_data_path, 'zucchabar.json'))
 
 

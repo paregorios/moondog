@@ -6,6 +6,8 @@ Metadata management for moondog
 
 import better_exceptions
 from enum import Enum, auto
+import inspect
+import jsonpickle
 import language_tags
 import logging
 # from lxml import etree
@@ -36,7 +38,36 @@ class TitleType(Enum):
     TRANSLATED = 'translated'
 
 
-class LanguageAware:
+class GetDict(object):
+    """Superclass for dictionary serialization."""
+
+    def __init__(self):
+        pass
+
+    def get_dict(self) -> dict:
+        members = inspect.getmembers(self, lambda a: not(inspect.isroutine(a)))
+        members = [a for a in members if (
+            not(a[0].startswith('__') and a[0].endswith('__')))]
+        d = {}
+        for name, value in members:
+            if isinstance(value, str):
+                d[name] = value
+            elif isinstance(value, list):
+                d[name] = []
+                for i, item in enumerate(value):
+                    if type(item) in [Agent, Name, Title]:
+                        d[name].append(item.get_dict())
+                    else:
+                        raise NotImplementedError(
+                            'no way: {}'.format(type(item)))
+            elif type(value) in [NameType, RoleTerm, TitleType]:
+                d[name] = value.value
+            else:
+                raise NotImplementedError('nope')
+        return d
+
+
+class LanguageAware(object):
     """Superclass for providing language awareness to other classes."""
 
     def __init__(self, lang: str = 'und', **kwargs):
@@ -47,7 +78,7 @@ class LanguageAware:
         self.lang = lang
 
 
-class SortAware:
+class SortAware(object):
     """Superclass for providing sortability information to other classes."""
 
     def __init__(self, sort_val: str, force: bool = False, **kwargs):
@@ -58,9 +89,10 @@ class SortAware:
         else:
             self.sort_val = sort_val.translate(punct_translator).lower().\
                             replace(' ', '')
+        logger.debug('resulting sort_val: "{}"'.format(self.sort_val))
 
 
-class Name(LanguageAware, SortAware):
+class Name(LanguageAware, SortAware, GetDict):
 
     def __init__(
         self,
@@ -69,6 +101,7 @@ class Name(LanguageAware, SortAware):
         name_type: NameType = NameType.PERSONAL,
         **kwargs
     ) -> None:
+        logger.debug('boom')
         self.full_name = full_name
         if display_name != '':
             self.display_name = display_name
@@ -89,7 +122,7 @@ class Name(LanguageAware, SortAware):
         return '{} name: "{}"'.format(self.name_type.value, self.full_name)
 
 
-class Agent:
+class Agent(GetDict):
 
     def __init__(
         self,
@@ -122,7 +155,7 @@ class Agent:
         return '{}: {}'.format(self.role.value, self.names[0].full_name)
 
 
-class Title(LanguageAware, SortAware):
+class Title(LanguageAware, SortAware, GetDict):
 
     def __init__(
         self,
@@ -141,7 +174,7 @@ class Title(LanguageAware, SortAware):
         LanguageAware.__init__(self, **kwargs)
 
 
-class DescriptiveMetadata:
+class DescriptiveMetadata(GetDict):
 
     def __init__(self, **kwargs):
         self.agents = []
@@ -175,3 +208,14 @@ class DescriptiveMetadata:
                         'Title information of type {} is not supported.'
                         ''.format(type(a)))
 
+    def write_json(self, path: str):
+        d = {
+
+        }
+        j = jsonpickle.encode(self, unpicklable=False)
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(j)
+        del f
+        logger.info(
+            'wrote {} characters on {}'
+            ''.format(len(j), path))
