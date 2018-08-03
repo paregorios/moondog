@@ -189,6 +189,7 @@ class Test_Metadata(TestCase):
                         'uris': []
                     }
                 ],
+                'keywords': [],
                 'titles': [
                     {
                         'sort_val': 'aquicktriptozucchabar',
@@ -226,6 +227,7 @@ class Test_Metadata(TestCase):
                         "uris": []
                     }
                 ],
+                "keywords": [],
                 "titles": [
                     {
                         "lang": "und",
@@ -242,4 +244,7 @@ class Test_Metadata(TestCase):
         m = DescriptiveMetadata(xmp=xmp)
         assert_equal(m.titles[0].value, 'Moontown Cotton')
         assert_equal(m.agents[0].names[0].full_name, 'Tom Elliott')
+        assert_equal(
+            [k.value for k in sorted(m.keywords, key=lambda k: k.sort_val)],
+            ['Alabama', 'cotton'])
 

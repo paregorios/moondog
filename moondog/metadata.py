@@ -172,6 +172,55 @@ class Agent(GetDict):
         return '{}: {}'.format(self.role.value, self.names[0].full_name)
 
 
+class Copyright(GetDict):
+
+    def __init__(
+        self,
+        statement: str = None,
+        year: str = None,
+        holder: Agent = None,
+        **kwargs
+    ):
+        pass
+
+
+class Keyword(LanguageAware, SortAware, GetDict):
+
+    def __init__(
+        self,
+        value: str,
+        uri: str = None,
+        **kwargs
+    ):
+        self.value = value
+        if uri is None:
+            self.uri = uri
+        elif url(uri):
+            self.uri = uri
+        else:
+            raise ValueError(
+                'URI value is not valid: "{}"'
+                ''.format(uri))
+        try:
+            kwargs['sort_val']
+        except KeyError:
+            SortAware.__init__(self, sort_val=self.value)
+        else:
+            SortAware.__init__(self, **kwargs, force=True)
+        LanguageAware.__init__(self, **kwargs)
+
+
+class License(GetDict):
+
+    def __init__(
+        self,
+        title: str = None,
+        url: str = None,
+        short_title: str = None
+    ):
+        pass
+
+
 class Title(LanguageAware, SortAware, GetDict):
 
     def __init__(
@@ -195,6 +244,7 @@ class DescriptiveMetadata(GetDict):
 
     def __init__(self, **kwargs):
         self.agents = []
+        self.keywords = []
         self.titles = []
         try:
             kwargs['xmp']
@@ -217,6 +267,20 @@ class DescriptiveMetadata(GetDict):
                         'Agent information of type {} is not supported.'
                         ''.format(type(a)))
         try:
+            kwargs['keywords']
+        except KeyError:
+            pass
+        else:
+            for k in kwargs['keywords']:
+                if isinstance(k, Keyword):
+                    self.keywords.append(k)
+                elif isinstance(k, dict):
+                    self.keywords.append(Keyword(**k))
+                else:
+                    raise ValueError(
+                        'Keyword information of type {} is not supported.'
+                        ''.format(type(k)))
+        try:
             kwargs['titles']
         except KeyError:
             pass
@@ -236,6 +300,7 @@ class DescriptiveMetadata(GetDict):
 
     def _parse_xmp_dc(self, xmp: XMPMeta) -> None:
         creators = []
+        keywords = []
         titles = []
         for p in XMPIterator(xmp, XMP_NS_DC):
             if p[1] == '':
@@ -273,6 +338,13 @@ class DescriptiveMetadata(GetDict):
             elif term == 'format':
                 # ignore format
                 pass
+            elif term == 'subject':
+                while len(keywords) < i + 1:
+                    keywords.append({})
+                if attr is None:
+                    keywords[i]['value'] = p[2]
+                elif attr == 'xml:lang':
+                    keywords[i]['lang'] = lang
             elif term == 'title':
                 while len(titles) < i + 1:
                     titles.append({})
@@ -288,9 +360,11 @@ class DescriptiveMetadata(GetDict):
                     print('\t{}@{}="{}"'.format(term, attr, p[2]))
 
         creators = [c for c in creators if len(c) != 0]
+        keywords = [k for k in keywords if len(k) != 0]
         titles = [t for t in titles if len(t) != 0]
-        self.titles = [Title(**t) for t in titles]
         self.agents = [Agent([Name(**c)]) for c in creators]
+        self.keywords = [Keyword(**k) for k in keywords]
+        self.titles = [Title(**t) for t in titles]
 
     def write_json(self, path: str):
         d = self.get_dict()
