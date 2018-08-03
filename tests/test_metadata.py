@@ -3,6 +3,7 @@
 """Test metadata functionality for moondog"""
 
 import json
+from libxmp import XMPFiles
 import logging
 from moondog.metadata import (Agent, LanguageAware, Name, DescriptiveMetadata,
                               NameType, RoleTerm, Title, TitleType)
@@ -235,4 +236,9 @@ class Test_Metadata(TestCase):
                 ]
             })
 
+    def test_descriptive_metadata_from_xmp(self):
+        path = join('tests', 'data', 'src', 'IMG_4107_XMP.png')
+        xmp = XMPFiles(file_path=path).get_xmp()
+        m = DescriptiveMetadata(xmp=xmp)
+        assert_equal(m.agents[0].names[0].full_name, 'Tom Elliott')
 

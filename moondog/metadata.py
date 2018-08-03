@@ -9,15 +9,21 @@ from enum import Enum, auto
 import inspect
 import json
 import language_tags
+from libxmp.core import XMPMeta, XMPIterator
+from libxmp.consts import XMP_NS_DC
 import logging
 # from lxml import etree
 from os.path import (basename, expanduser, expandvars, join, normpath,
                      realpath, splitext)
+from pprint import pprint
+import re
 import string
 from validators import url
 
 logger = logging.getLogger(__name__)
 punct_translator = str.maketrans('', '', string.punctuation)
+rx_dcterm = re.compile(
+    r'^dc:(?P<term>[a-z]+)(\[(?P<index>\d+)\])?(/\?(?P<attr>.+))?$')
 
 
 class NameType(Enum):
@@ -178,6 +184,13 @@ class DescriptiveMetadata(GetDict):
 
     def __init__(self, **kwargs):
         self.agents = []
+        self.titles = []
+        try:
+            kwargs['xmp']
+        except KeyError:
+            pass
+        else:
+            self.parse_xmp(kwargs['xmp'])
         try:
             kwargs['agents']
         except KeyError:
@@ -192,7 +205,6 @@ class DescriptiveMetadata(GetDict):
                     raise ValueError(
                         'Agent information of type {} is not supported.'
                         ''.format(type(a)))
-        self.titles = []
         try:
             kwargs['titles']
         except KeyError:
@@ -207,6 +219,41 @@ class DescriptiveMetadata(GetDict):
                     raise ValueError(
                         'Title information of type {} is not supported.'
                         ''.format(type(a)))
+
+    def parse_xmp(self, xmp: XMPMeta) -> None:
+        self._parse_xmp_dc(xmp)
+
+    def _parse_xmp_dc(self, xmp: XMPMeta) -> None:
+        for p in XMPIterator(xmp, XMP_NS_DC):
+            term = p[1]
+            if term == '':
+                continue
+            m = rx_dcterm.match(term)
+            if m is None:
+                raise RuntimeError('DC term match failure')
+            if m.group('term') == 'creator':
+                full_name = ''
+                lang = 'und'
+                if m.group('attr') is None:
+                    if p[2] == '':
+                        continue
+                    else:
+                        full_name = p[2]
+                elif m.group('attr') == 'xml:lang':
+                    if p[2] == 'x-default':
+                        pass
+                    else:
+                        raise RuntimeError(
+                            'unexpected xml:lang = "{}"'
+                            ''.format(p[2]))
+                else:
+                    raise RuntimeError(
+                        'unexpected attr = "{}"'
+                        ''.format(m.group('attr')))
+                if full_name != '':
+                    name = Name(full_name=full_name, lang=lang)
+                    agent = Agent(names=[name])
+                    self.agents.append(agent)
 
     def write_json(self, path: str):
         d = self.get_dict()
