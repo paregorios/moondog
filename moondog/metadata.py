@@ -184,6 +184,23 @@ class Copyright(GetDict):
         pass
 
 
+class Description(LanguageAware, SortAware, GetDict):
+
+    def __init__(
+        self,
+        value: str,
+        **kwargs
+    ):
+        self.value = value
+        try:
+            kwargs['sort_val']
+        except KeyError:
+            SortAware.__init__(self, sort_val=self.value)
+        else:
+            SortAware.__init__(self, **kwargs, force=True)
+        LanguageAware.__init__(self, **kwargs)
+
+
 class Keyword(LanguageAware, SortAware, GetDict):
 
     def __init__(
@@ -244,6 +261,7 @@ class DescriptiveMetadata(GetDict):
 
     def __init__(self, **kwargs):
         self.agents = []
+        self.descriptions = []
         self.keywords = []
         self.titles = []
         try:
@@ -266,6 +284,20 @@ class DescriptiveMetadata(GetDict):
                     raise ValueError(
                         'Agent information of type {} is not supported.'
                         ''.format(type(a)))
+        try:
+            kwargs['descriptions']
+        except KeyError:
+            pass
+        else:
+            for d in kwargs['descriptions']:
+                if isinstance(d, Description):
+                    self.descriptions.append(d)
+                elif isinstance(d, dict):
+                    self.descriptions.append(Description(**d))
+                else:
+                    raise ValueError(
+                        'Description information of type {} is not supported.'
+                        ''.format(type(d)))
         try:
             kwargs['keywords']
         except KeyError:
@@ -300,6 +332,7 @@ class DescriptiveMetadata(GetDict):
 
     def _parse_xmp_dc(self, xmp: XMPMeta) -> None:
         creators = []
+        descriptions = []
         keywords = []
         titles = []
         for p in XMPIterator(xmp, XMP_NS_DC):
@@ -335,6 +368,13 @@ class DescriptiveMetadata(GetDict):
                     creators[i]['full_name'] = p[2]
                 elif attr == 'xml:lang':
                     creators[i]['lang'] = lang
+            elif term == 'description':
+                while len(descriptions) < i + 1:
+                    descriptions.append({})
+                if attr is None:
+                    descriptions[i]['value'] = p[2]
+                elif attr == 'xml:lang':
+                    creators[i]['lang'] = lang
             elif term == 'format':
                 # ignore format
                 pass
@@ -360,9 +400,11 @@ class DescriptiveMetadata(GetDict):
                     print('\t{}@{}="{}"'.format(term, attr, p[2]))
 
         creators = [c for c in creators if len(c) != 0]
+        descriptions = [d for d in descriptions if len(d) != 0]
         keywords = [k for k in keywords if len(k) != 0]
         titles = [t for t in titles if len(t) != 0]
         self.agents = [Agent([Name(**c)]) for c in creators]
+        self.descriptions = [Description(**d) for d in descriptions]
         self.keywords = [Keyword(**k) for k in keywords]
         self.titles = [Title(**t) for t in titles]
 

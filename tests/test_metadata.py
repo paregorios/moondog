@@ -189,6 +189,7 @@ class Test_Metadata(TestCase):
                         'uris': []
                     }
                 ],
+                'descriptions': [],
                 'keywords': [],
                 'titles': [
                     {
@@ -227,6 +228,7 @@ class Test_Metadata(TestCase):
                         "uris": []
                     }
                 ],
+                "descriptions": [],
                 "keywords": [],
                 "titles": [
                     {
@@ -244,6 +246,10 @@ class Test_Metadata(TestCase):
         m = DescriptiveMetadata(xmp=xmp)
         assert_equal(m.titles[0].value, 'Moontown Cotton')
         assert_equal(m.agents[0].names[0].full_name, 'Tom Elliott')
+        assert_equal(
+            m.descriptions[0].value,
+            'A picture of cotton alongside a gravel road in Moontown, '
+            'Alabama.')
         assert_equal(
             [k.value for k in sorted(m.keywords, key=lambda k: k.sort_val)],
             ['Alabama', 'cotton'])
