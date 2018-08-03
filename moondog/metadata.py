@@ -403,10 +403,10 @@ class DescriptiveMetadata(GetDict):
         descriptions = [d for d in descriptions if len(d) != 0]
         keywords = [k for k in keywords if len(k) != 0]
         titles = [t for t in titles if len(t) != 0]
-        self.agents = [Agent([Name(**c)]) for c in creators]
-        self.descriptions = [Description(**d) for d in descriptions]
-        self.keywords = [Keyword(**k) for k in keywords]
-        self.titles = [Title(**t) for t in titles]
+        self.agents.extend([Agent([Name(**c)]) for c in creators])
+        self.descriptions.extend([Description(**d) for d in descriptions])
+        self.keywords.extend([Keyword(**k) for k in keywords])
+        self.titles.extend([Title(**t) for t in titles])
 
     def write_json(self, path: str):
         d = self.get_dict()
