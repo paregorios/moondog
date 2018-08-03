@@ -44,6 +44,17 @@ class TitleType(Enum):
     TRANSLATED = 'translated'
 
 
+class ImageFormat(Enum):
+    BMP = 'image/bmp'
+    GIF = 'image/gif'
+    JPEG = 'image/jpeg'
+    JP2 = 'image/jp2'  # jpeg2000
+    PCD = 'image/x-photo-cd'
+    PNG = 'image/png'
+    PSD = 'image/vnd.adobe.photoshop'
+    TIFF = 'image/tiff'
+
+
 class GetDict(object):
     """Superclass for dictionary serialization."""
 
@@ -259,6 +270,9 @@ class DescriptiveMetadata(GetDict):
                     creators[i]['full_name'] = p[2]
                 elif attr == 'xml:lang':
                     creators[i]['lang'] = lang
+            elif term == 'format':
+                # ignore format
+                pass
             elif term == 'title':
                 while len(titles) < i + 1:
                     titles.append({})
