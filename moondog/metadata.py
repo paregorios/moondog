@@ -224,36 +224,59 @@ class DescriptiveMetadata(GetDict):
         self._parse_xmp_dc(xmp)
 
     def _parse_xmp_dc(self, xmp: XMPMeta) -> None:
+        creators = []
+        titles = []
         for p in XMPIterator(xmp, XMP_NS_DC):
-            term = p[1]
-            if term == '':
+            if p[1] == '':
                 continue
-            m = rx_dcterm.match(term)
+            m = rx_dcterm.match(p[1])
             if m is None:
                 raise RuntimeError('DC term match failure')
-            if m.group('term') == 'creator':
-                full_name = ''
-                lang = 'und'
-                if m.group('attr') is None:
-                    if p[2] == '':
-                        continue
-                    else:
-                        full_name = p[2]
-                elif m.group('attr') == 'xml:lang':
-                    if p[2] == 'x-default':
-                        pass
-                    else:
-                        raise RuntimeError(
-                            'unexpected xml:lang = "{}"'
-                            ''.format(p[2]))
+            i = m.group('index')
+            if i is None:
+                i = 0
+            else:
+                i = int(i)
+            attr = m.group('attr')
+            if attr is None:
+                if p[2] == '':
+                    # initial item is often blank for some reason
+                    continue
+            elif attr == 'xml:lang':
+                if p[2] == 'x-default':
+                    lang = 'und'
                 else:
-                    raise RuntimeError(
-                        'unexpected attr = "{}"'
-                        ''.format(m.group('attr')))
-                if full_name != '':
-                    name = Name(full_name=full_name, lang=lang)
-                    agent = Agent(names=[name])
-                    self.agents.append(agent)
+                    lang = p[2]
+            else:
+                raise RuntimeError(
+                    'unexpected attr = "{}"'
+                    ''.format(attr))
+            term = m.group('term')
+            if term == 'creator':
+                while len(creators) < i + 1:
+                    creators.append({})
+                if attr is None:
+                    creators[i]['full_name'] = p[2]
+                elif attr == 'xml:lang':
+                    creators[i]['lang'] = lang
+            elif term == 'title':
+                while len(titles) < i + 1:
+                    titles.append({})
+                if attr is None:
+                    titles[i]['title_val'] = p[2]
+                elif attr == 'xml:lang':
+                    titles[i]['lang'] = lang
+            else:
+                print('untreated term:')
+                if attr is None:
+                    print('\t{}="{}"'.format(term, p[2]))
+                else:
+                    print('\t{}@{}="{}"'.format(term, attr, p[2]))
+
+        creators = [c for c in creators if len(c) != 0]
+        titles = [t for t in titles if len(t) != 0]
+        self.titles = [Title(**t) for t in titles]
+        self.agents = [Agent([Name(**c)]) for c in creators]
 
     def write_json(self, path: str):
         d = self.get_dict()

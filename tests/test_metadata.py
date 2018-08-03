@@ -240,5 +240,6 @@ class Test_Metadata(TestCase):
         path = join('tests', 'data', 'src', 'IMG_4107_XMP.png')
         xmp = XMPFiles(file_path=path).get_xmp()
         m = DescriptiveMetadata(xmp=xmp)
+        assert_equal(m.titles[0].value, 'Moontown Cotton')
         assert_equal(m.agents[0].names[0].full_name, 'Tom Elliott')
 
