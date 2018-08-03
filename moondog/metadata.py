@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 punct_translator = str.maketrans('', '', string.punctuation)
 rx_dcterm = re.compile(
     r'^dc:(?P<term>[a-z]+)(\[(?P<index>\d+)\])?(/\?(?P<attr>.+))?$')
+rx_rights = re.compile(
+    r'^(copyright|©|©️|\(c\))\s+(?P<years>[\d\-]+)\s+(by\s+)?(?P<name>.+)$',
+    re.IGNORECASE)
 
 
 class NameType(Enum):
@@ -177,7 +180,7 @@ class Copyright(GetDict):
     def __init__(
         self,
         statement: str = None,
-        year: str = None,
+        years: str = None,
         holder: Agent = None,
         **kwargs
     ):
@@ -261,6 +264,7 @@ class DescriptiveMetadata(GetDict):
 
     def __init__(self, **kwargs):
         self.agents = []
+        self.copyright = []
         self.descriptions = []
         self.keywords = []
         self.titles = []
@@ -334,6 +338,7 @@ class DescriptiveMetadata(GetDict):
         creators = []
         descriptions = []
         keywords = []
+        rights = []
         titles = []
         for p in XMPIterator(xmp, XMP_NS_DC):
             if p[1] == '':
@@ -361,6 +366,7 @@ class DescriptiveMetadata(GetDict):
                     'unexpected attr = "{}"'
                     ''.format(attr))
             term = m.group('term')
+
             if term == 'creator':
                 while len(creators) < i + 1:
                     creators.append({})
@@ -368,6 +374,7 @@ class DescriptiveMetadata(GetDict):
                     creators[i]['full_name'] = p[2]
                 elif attr == 'xml:lang':
                     creators[i]['lang'] = lang
+
             elif term == 'description':
                 while len(descriptions) < i + 1:
                     descriptions.append({})
@@ -375,9 +382,24 @@ class DescriptiveMetadata(GetDict):
                     descriptions[i]['value'] = p[2]
                 elif attr == 'xml:lang':
                     creators[i]['lang'] = lang
+
             elif term == 'format':
                 # ignore format
                 pass
+
+            elif term == 'rights':
+                while len(rights) < i + 1:
+                    rights.append({})
+                if attr is None:
+                    m = rx_rights.match(p[2])
+                    if m is None:
+                        raise RuntimeError('rx failure on rights!')
+                    rights[i]['statement'] = p[2]
+                    rights[i]['holder'] = Agent(names=[Name(m.group('name'))])
+                    rights[i]['years'] = m.group('years')
+                elif attr == 'xml:lang':
+                    rights[i]['lang'] = lang
+
             elif term == 'subject':
                 while len(keywords) < i + 1:
                     keywords.append({})
@@ -385,6 +407,7 @@ class DescriptiveMetadata(GetDict):
                     keywords[i]['value'] = p[2]
                 elif attr == 'xml:lang':
                     keywords[i]['lang'] = lang
+
             elif term == 'title':
                 while len(titles) < i + 1:
                     titles.append({})
@@ -392,6 +415,7 @@ class DescriptiveMetadata(GetDict):
                     titles[i]['title_val'] = p[2]
                 elif attr == 'xml:lang':
                     titles[i]['lang'] = lang
+
             else:
                 print('untreated term:')
                 if attr is None:
@@ -402,10 +426,12 @@ class DescriptiveMetadata(GetDict):
         creators = [c for c in creators if len(c) != 0]
         descriptions = [d for d in descriptions if len(d) != 0]
         keywords = [k for k in keywords if len(k) != 0]
+        rights = [r for r in rights if len(r) != 0]
         titles = [t for t in titles if len(t) != 0]
         self.agents.extend([Agent([Name(**c)]) for c in creators])
         self.descriptions.extend([Description(**d) for d in descriptions])
         self.keywords.extend([Keyword(**k) for k in keywords])
+        self.copyright.extend([Copyright(**r) for r in rights])
         self.titles.extend([Title(**t) for t in titles])
 
     def write_json(self, path: str):

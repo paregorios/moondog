@@ -189,6 +189,7 @@ class Test_Metadata(TestCase):
                         'uris': []
                     }
                 ],
+                'copyright': [],
                 'descriptions': [],
                 'keywords': [],
                 'titles': [
@@ -228,6 +229,7 @@ class Test_Metadata(TestCase):
                         "uris": []
                     }
                 ],
+                "copyright": [],
                 "descriptions": [],
                 "keywords": [],
                 "titles": [
